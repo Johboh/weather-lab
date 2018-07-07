@@ -11,6 +11,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
+import javax.inject.Inject;
+
 /**
  * Wrapper around Location Listener, which also handle check for permissions
  */
@@ -42,6 +44,7 @@ public class GpsLocationListener {
         }
     };
 
+    @Inject
     GpsLocationListener(Activity context, LocationManager locationManager) {
         this.mContext = context;
         this.mLocationManager = locationManager;

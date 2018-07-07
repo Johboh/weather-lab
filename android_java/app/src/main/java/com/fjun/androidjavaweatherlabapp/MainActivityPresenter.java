@@ -12,6 +12,8 @@ import com.fjun.androidjavaweatherlabapp.Yr.Yr;
 
 import java.util.Locale;
 
+import javax.inject.Inject;
+
 import static com.fjun.androidjavaweatherlabapp.Yr.YrWeatherService.IMAGE_URL;
 
 /**
@@ -20,22 +22,18 @@ import static com.fjun.androidjavaweatherlabapp.Yr.YrWeatherService.IMAGE_URL;
  */
 public class MainActivityPresenter implements LifecycleObserver {
 
+    private final MainActivityViewBinder mViewBinder;
     private final GpsLocationListener mGpsLocationListener;
     private final Yr mYr;
 
-    @Nullable
-    private MainActivityViewBinder mViewBinder;
-
-    MainActivityPresenter(GpsLocationListener gpsLocationListener, Yr yr) {
+    @Inject
+    MainActivityPresenter(
+            MainActivityViewBinder viewBinder,
+            GpsLocationListener gpsLocationListener,
+            Yr yr) {
+        mViewBinder = viewBinder;
         mGpsLocationListener = gpsLocationListener;
         mYr = yr;
-    }
-
-    /**
-     * Set the view binder for this presenter.
-     */
-    public void attachView(MainActivityViewBinder mainActivityViewBinder) {
-        mViewBinder = mainActivityViewBinder;
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)

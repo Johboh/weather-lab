@@ -1,34 +1,33 @@
 package com.fjun.androidjavaweatherlabapp;
 
-import android.content.Context;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.fjun.androidjavaweatherlabapp.Yr.Yr;
 import com.squareup.picasso.Picasso;
+
+import javax.inject.Inject;
+
+import dagger.android.AndroidInjection;
 
 public class MainActivity extends AppCompatActivity implements MainActivityViewBinder {
 
-    private MainActivityPresenter mPresenter;
+    @Inject
+    MainActivityPresenter mPresenter;
 
     private TextView mCurrentLocation;
     private ImageView mImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mCurrentLocation = findViewById(R.id.current_location);
         mImageView = findViewById(R.id.icon);
 
-        // Setup presenter: Attach the view and register for lifecycle listener
-        final GpsLocationListener gpsLocationListener = new GpsLocationListener(this, (LocationManager) this.getSystemService(Context.LOCATION_SERVICE));
-        final Yr yr = new Yr();
-        mPresenter = new MainActivityPresenter(gpsLocationListener, yr);
-        mPresenter.attachView(this);
+        // Setup presenter: Attach lifecycle
         getLifecycle().addObserver(mPresenter);
     }
 
