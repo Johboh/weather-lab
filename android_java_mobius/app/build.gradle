@@ -29,15 +29,19 @@ dependencies {
     implementation 'com.spotify.mobius:mobius-core:1.2.0'
     implementation 'com.spotify.mobius:mobius-android:1.2.0'
     implementation 'com.spotify.mobius:mobius-extras:1.2.0'
+    implementation 'com.spotify.dataenum:dataenum:1.3.1'
     implementation 'com.squareup.retrofit2:retrofit:2.4.0'
     implementation 'com.squareup.retrofit2:converter-simplexml:2.4.0'
     implementation 'com.squareup.picasso:picasso:2.71828'
     // apt command comes from the android-apt plugin
     implementation 'com.google.dagger:dagger-android:2.11'
     implementation 'com.google.dagger:dagger-android-support:2.11'
+    implementation "com.google.auto.value:auto-value-annotations:1.6"
     // if you use the support libraries
     annotationProcessor 'com.google.dagger:dagger-android-processor:2.11'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.11'
+    annotationProcessor 'com.spotify.dataenum:dataenum-processor:1.3.1'
+    annotationProcessor "com.google.auto.value:auto-value:1.6"
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
