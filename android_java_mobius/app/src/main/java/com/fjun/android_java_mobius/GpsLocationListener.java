@@ -1,6 +1,7 @@
 package com.fjun.android_java_mobius;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -55,18 +56,41 @@ public class GpsLocationListener {
      * Will first check that the user have permissions to get location.
      * //TODO (johboh): If the user does not have permission but accepts it, no registration will happen.
      */
+    @SuppressLint("MissingPermission")
     public void registerListener(Callback callback) {
         mCallback = callback;
 
+        if (hasPermissions()) {
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BETWEEN_UPDATES_MS, 0, mLocationListener);
+            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BETWEEN_UPDATES_MS, 0, mLocationListener);
+        }
+    }
+
+    private boolean hasPermissions() {
         if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(mContext,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-
-        } else {
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BETWEEN_UPDATES_MS, 0, mLocationListener);
-            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BETWEEN_UPDATES_MS, 0, mLocationListener);
+            return false;
         }
+        return true;
+    }
+
+    /**
+     * get last known location. Will check for permissions first. If no permissions currently,
+     * will return null. Also if there is no known location.
+     */
+    @Nullable
+    @SuppressLint("MissingPermission")
+    public Location getLastKnownLocation() {
+        if (!hasPermissions()) {
+            return null;
+        }
+        final Location location = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (location != null) {
+            return location;
+        }
+        return mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
     }
 
     /**

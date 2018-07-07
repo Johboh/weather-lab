@@ -4,14 +4,28 @@ import android.arch.lifecycle.Lifecycle;
 import android.arch.lifecycle.LifecycleObserver;
 import android.arch.lifecycle.OnLifecycleEvent;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.fjun.android_java_mobius.Yr.Symbol;
 import com.fjun.android_java_mobius.Yr.Temperature;
-import com.fjun.android_java_mobius.Yr.Yr;
+import com.fjun.android_java_mobius.mobius.Effect;
+import com.fjun.android_java_mobius.mobius.EffectHandler;
+import com.fjun.android_java_mobius.mobius.Event;
+import com.fjun.android_java_mobius.mobius.Model;
+import com.fjun.android_java_mobius.mobius.UpdateFunction;
+import com.spotify.mobius.Connectable;
+import com.spotify.mobius.Connection;
+import com.spotify.mobius.ConnectionLimitExceededException;
+import com.spotify.mobius.First;
+import com.spotify.mobius.Init;
+import com.spotify.mobius.Mobius;
+import com.spotify.mobius.MobiusLoop;
+import com.spotify.mobius.functions.Consumer;
 
+import java.util.Collections;
 import java.util.Locale;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
 import static com.fjun.android_java_mobius.Yr.YrWeatherService.IMAGE_URL;
@@ -23,44 +37,54 @@ import static com.fjun.android_java_mobius.Yr.YrWeatherService.IMAGE_URL;
 public class MainActivityPresenter implements LifecycleObserver {
 
     private final MainActivityViewBinder mViewBinder;
-    private final GpsLocationListener mGpsLocationListener;
-    private final Yr mYr;
+    private final MobiusLoop<Model, Event, Effect> mMobiusLoop;
 
     @Inject
     MainActivityPresenter(
             MainActivityViewBinder viewBinder,
-            GpsLocationListener gpsLocationListener,
-            Yr yr) {
+            EffectHandler effectHandler) {
         mViewBinder = viewBinder;
-        mGpsLocationListener = gpsLocationListener;
-        mYr = yr;
+        mMobiusLoop = Mobius.loop(UpdateFunction::update, new Connectable<Effect, Event>() {
+            @Nonnull
+            @Override
+            public Connection<Effect> connect(@NonNull Consumer<Event> eventConsumer) throws ConnectionLimitExceededException {
+                return effectHandler.effectHandler(eventConsumer);
+            }
+        }).init(new Init<Model, Effect>() {
+            @Nonnull
+            @Override
+            public First<Model, Effect> init(@NonNull Model model) {
+                return First.first(Model.builder().isFetchingLocation(true).build(), Collections.singleton(Effect.waitForLocation()));
+            }
+        }).startFrom(Model.builder().isFetchingLocation(true).build());
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     public void onStart() {
-        mViewBinder.showWaitingForPosition();
-
-        mGpsLocationListener.registerListener(location -> {
-            mViewBinder.showWaitingForWeather();
-            mYr.requestWeather(location, new Yr.Callback() {
-                @Override
-                public void onTemperature(@NonNull Temperature temperature, @Nullable Symbol symbol) {
+        mMobiusLoop.observe(model -> {
+            if (model.isFetchingLocation()) {
+                mViewBinder.showWaitingForPosition();
+            } else if (model.isFetchingWeather()) {
+                mViewBinder.showWaitingForWeather();
+            } else if (!TextUtils.isEmpty(model.errorString())) {
+                mViewBinder.showSomethingWentWrong(model.errorString());
+            } else {
+                final Temperature temperature = model.temperature();
+                final Symbol symbol = model.symbol();
+                if (temperature == null) {
+                    mViewBinder.showSomethingWentWrong("Null temperature");
+                } else {
                     mViewBinder.setTemperature(String.format(Locale.US, "%s %s", temperature.value, temperature.unit));
                     if (symbol != null) {
                         mViewBinder.setImageUrl(String.format(Locale.US, IMAGE_URL, symbol.number));
                     }
                 }
-
-                @Override
-                public void onError(@NonNull Throwable throwable) {
-                    mViewBinder.showSomethingWentWrong(throwable.getMessage());
-                }
-            });
+            }
         });
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     public void onStop() {
-        mGpsLocationListener.unregisterListener();
+        mMobiusLoop.dispose();
     }
 }

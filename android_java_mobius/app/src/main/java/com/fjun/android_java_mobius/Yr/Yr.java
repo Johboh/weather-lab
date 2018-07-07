@@ -10,6 +10,7 @@ import org.simpleframework.xml.strategy.Type;
 import org.simpleframework.xml.strategy.Value;
 import org.simpleframework.xml.stream.NodeMap;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.List;
@@ -17,7 +18,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
@@ -32,7 +32,7 @@ public class Yr {
     }
 
     /**
-     * Request weather given a location.
+     * Request weather given a location. Blocking call.
      */
     public void requestWeather(Location location, Callback callback) {
         Retrofit retrofit = new Retrofit.Builder()
@@ -46,49 +46,49 @@ public class Yr {
         DecimalFormatSymbols custom = new DecimalFormatSymbols();
         custom.setDecimalSeparator('.');
         formatter.setDecimalFormatSymbols(custom);
-        yrWeatherService.forecast(formatter.format(location.getLatitude()), formatter.format(location.getLongitude())).enqueue(new retrofit2.Callback<Weatherdata>() {
-            @Override
-            public void onResponse(@NonNull Call<Weatherdata> call, @NonNull Response<Weatherdata> response) {
-                final Weatherdata weatherdata = response.body();
-                if (weatherdata == null || weatherdata.product == null || weatherdata.product.time == null) {
-                    callback.onError(new Throwable("Weatherdata is null or missing children"));
-                    return;
-                }
-
-                // Find first temperature and symbol.
-                // Symbol and temperature are not located within the same <time>
-                Temperature temperature = null;
-                Symbol symbol = null;
-                final List<Time> times = weatherdata.product.time;
-                for (Time time : times) {
-                    final com.fjun.android_java_mobius.Yr.Location timeLocation = time.location;
-                    if (timeLocation != null) {
-                        if (symbol == null) {
-                            symbol = timeLocation.symbol;
-                        }
-                        if (temperature == null) {
-                            temperature = timeLocation.temperature;
-                        }
-                    }
-                    // Found both of them?
-                    if (symbol != null && temperature != null) {
-                        break;
-                    }
-                }
-
-                if (temperature == null) {
-                    callback.onError(new Throwable("Unable to find a temperature."));
-                    return;
-                }
-
-                callback.onTemperature(temperature, symbol);
+        try {
+            final Response<Weatherdata> response = yrWeatherService.forecast(formatter.format(location.getLatitude()), formatter.format(location.getLongitude())).execute();
+            if (response == null || response.body() == null) {
+                callback.onError(new Throwable("response or response.body() is null"));
+                return;
             }
 
-            @Override
-            public void onFailure(@NonNull Call<Weatherdata> call, @NonNull Throwable throwable) {
-                callback.onError(throwable);
+            final Weatherdata weatherdata = response.body();
+            if (weatherdata == null || weatherdata.product == null || weatherdata.product.time == null) {
+                callback.onError(new Throwable("Weatherdata is null or missing children"));
+                return;
             }
-        });
+
+            // Find first temperature and symbol.
+            // Symbol and temperature are not located within the same <time>
+            Temperature temperature = null;
+            Symbol symbol = null;
+            final List<Time> times = weatherdata.product.time;
+            for (Time time : times) {
+                final com.fjun.android_java_mobius.Yr.Location timeLocation = time.location;
+                if (timeLocation != null) {
+                    if (symbol == null) {
+                        symbol = timeLocation.symbol;
+                    }
+                    if (temperature == null) {
+                        temperature = timeLocation.temperature;
+                    }
+                }
+                // Found both of them?
+                if (symbol != null && temperature != null) {
+                    break;
+                }
+            }
+
+            if (temperature == null) {
+                callback.onError(new Throwable("Unable to find a temperature."));
+                return;
+            }
+
+            callback.onTemperature(temperature, symbol);
+        } catch (IOException e) {
+            callback.onError(e);
+        }
     }
 
     public interface Callback {

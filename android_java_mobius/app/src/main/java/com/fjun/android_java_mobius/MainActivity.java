@@ -56,5 +56,4 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewB
         Picasso picasso = Picasso.get();
         picasso.load(imageUrl).into(mImageView);
     }
-
 }
