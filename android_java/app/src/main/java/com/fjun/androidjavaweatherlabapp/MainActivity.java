@@ -16,7 +16,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewB
     @Inject
     MainActivityPresenter mPresenter;
 
-    private TextView mCurrentLocation;
+    private TextView mStatusTextView;
     private ImageView mImageView;
 
     @Override
@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewB
         AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mCurrentLocation = findViewById(R.id.current_location);
+        mStatusTextView = findViewById(R.id.status);
         mImageView = findViewById(R.id.icon);
 
         // Setup presenter: Attach lifecycle
@@ -33,7 +33,22 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewB
 
     @Override
     public void setTemperature(String temperature) {
-        mCurrentLocation.setText(getString(R.string.current_location, temperature));
+        mStatusTextView.setText(getString(R.string.temperature, temperature));
+    }
+
+    @Override
+    public void showSomethingWentWrong(String error) {
+        mStatusTextView.setText(getString(R.string.something_went_wrong, error));
+    }
+
+    @Override
+    public void showWaitingForPosition() {
+        mStatusTextView.setText(getString(R.string.waiting_for_position));
+    }
+
+    @Override
+    public void showWaitingForWeather() {
+        mStatusTextView.setText(getString(R.string.waiting_for_weather));
     }
 
     @Override

@@ -22,6 +22,9 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
+/**
+ * Helper for requesting data from YR weather service, given a location.
+ */
 public class Yr {
 
     @Inject

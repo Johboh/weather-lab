@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Weather</string>
-    <string name="current_location">Temperature at current location: %s</string>
+    <string name="temperature">Temperature at current location: %s</string>
+    <string name="waiting_for_position">Waiting for position…</string>
+    <string name="waiting_for_weather">Waiting for weather…</string>
+    <string name="something_went_wrong">Something went wrong: %s</string>
 </resources>

@@ -6,5 +6,10 @@ package com.fjun.androidjavaweatherlabapp;
 public interface MainActivityViewBinder {
     void setTemperature(String temperature);
 
+    void showSomethingWentWrong(String error);
+
+    void showWaitingForPosition();
+
+    void showWaitingForWeather();
     void setImageUrl(String imageUrl);
 }

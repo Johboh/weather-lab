@@ -38,20 +38,25 @@ public class MainActivityPresenter implements LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     public void onStart() {
-        mGpsLocationListener.registerListener(location -> mYr.requestWeather(location, new Yr.Callback() {
-            @Override
-            public void onTemperature(@NonNull Temperature temperature, @Nullable Symbol symbol) {
-                mViewBinder.setTemperature(String.format(Locale.US, "%s %s", temperature.value, temperature.unit));
-                if (symbol != null) {
-                    mViewBinder.setImageUrl(String.format(Locale.US, IMAGE_URL, symbol.number));
-                }
-            }
+        mViewBinder.showWaitingForPosition();
 
-            @Override
-            public void onError(Throwable throwable) {
-                mViewBinder.setTemperature(":( " + throwable.getMessage());
-            }
-        }));
+        mGpsLocationListener.registerListener(location -> {
+            mViewBinder.showWaitingForWeather();
+            mYr.requestWeather(location, new Yr.Callback() {
+                @Override
+                public void onTemperature(@NonNull Temperature temperature, @Nullable Symbol symbol) {
+                    mViewBinder.setTemperature(String.format(Locale.US, "%s %s", temperature.value, temperature.unit));
+                    if (symbol != null) {
+                        mViewBinder.setImageUrl(String.format(Locale.US, IMAGE_URL, symbol.number));
+                    }
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+                    mViewBinder.showSomethingWentWrong(throwable.getMessage());
+                }
+            });
+        });
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
