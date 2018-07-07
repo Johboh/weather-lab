@@ -41,5 +41,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+
+	<!-- geolocation for iOS 11 +, in use -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>To get weather data for current location</string>
 </dict>
 </plist>

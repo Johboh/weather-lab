@@ -1,4 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:geolocation/geolocation.dart';
+import 'package:http/http.dart' as http;
+import 'package:xml2json/xml2json.dart';
 
 void main() => runApp(new MyApp());
 
@@ -7,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Flutter Weather Lab',
       theme: new ThemeData(
         // This is the theme of your application.
         //
@@ -19,7 +24,7 @@ class MyApp extends StatelessWidget {
         // counter didn't reset back to zero; the application is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: new MyHomePage(title: 'Flutter Demo Home Page'),
+      home: new MyHomePage(title: 'Flutter Weather App'),
     );
   }
 }
@@ -43,16 +48,56 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  String _status = "Push button to request weather for current location";
+  String _imageUri = "";
 
-  void _incrementCounter() {
+  _requestWeather(Location location) async {
+    String latitude = location.latitude.toStringAsFixed(2);
+    String longitude = location.longitude.toStringAsFixed(2);
+    String dataURL = "https://api.met.no/weatherapi/locationforecast/1.9?lat=$latitude&lon=$longitude";
+    http.Response response = await http.get(dataURL);
+    final Xml2Json transformer = new Xml2Json();
+    transformer.parse(response.body);
+    String jsn = transformer.toGData();
+    Map data = json.decode(jsn);
+    List times = data['weatherdata']['product']['time'];
+    // Find first temperature and symbol.
+    Map temperature;
+    Map symbol;
+    for (Map time in times) {
+      Map mapLocation = time['location'];
+      if (temperature == null && mapLocation.containsKey("temperature")) {
+        temperature = mapLocation['temperature'];
+      }
+      if (symbol == null && mapLocation.containsKey('symbol')) {
+        symbol = mapLocation['symbol'];
+      }
+      if (symbol != null && temperature != null) {
+        break;
+      }
+    }
+
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _status = "${temperature['value']} ${temperature['unit']}";
+      if (symbol != null) {
+        _imageUri =
+        "https://api.met.no/weatherapi/weathericon/1.1/?symbol=${symbol['number']}&content_type=image/png";
+      }
+    });
+  }
+
+  void _requestLocationAndWeather() {
+    setState(() {
+      _status = "Requesting location...";
+    });
+    Geolocation.currentLocation(accuracy: LocationAccuracy.best).listen((
+        result) {
+      if (result.isSuccessful) {
+        setState(() {
+          _status = "Requesting weather...";
+        });
+        _requestWeather(result.location);
+      }
     });
   }
 
@@ -90,19 +135,16 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             new Text(
-              'You have pushed the button this many times:',
+              '$_status',
             ),
-            new Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
+            Image.network(_imageUri)
           ],
         ),
       ),
       floatingActionButton: new FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: new Icon(Icons.add),
+        onPressed: _requestLocationAndWeather,
+        tooltip: 'Request weather',
+        child: new Icon(Icons.wb_sunny),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
