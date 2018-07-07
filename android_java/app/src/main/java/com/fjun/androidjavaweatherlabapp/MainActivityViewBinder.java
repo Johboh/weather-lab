@@ -11,5 +11,6 @@ public interface MainActivityViewBinder {
     void showWaitingForPosition();
 
     void showWaitingForWeather();
+
     void setImageUrl(String imageUrl);
 }

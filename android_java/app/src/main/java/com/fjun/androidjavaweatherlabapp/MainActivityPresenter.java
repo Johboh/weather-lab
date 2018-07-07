@@ -52,7 +52,7 @@ public class MainActivityPresenter implements LifecycleObserver {
                 }
 
                 @Override
-                public void onError(Throwable throwable) {
+                public void onError(@NonNull Throwable throwable) {
                     mViewBinder.showSomethingWentWrong(throwable.getMessage());
                 }
             });

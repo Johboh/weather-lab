@@ -27,10 +27,6 @@ import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
  */
 public class Yr {
 
-    @Inject
-    public Yr() {
-    }
-
     /**
      * Request weather given a location.
      */
@@ -48,7 +44,7 @@ public class Yr {
         formatter.setDecimalFormatSymbols(custom);
         yrWeatherService.forecast(formatter.format(location.getLatitude()), formatter.format(location.getLongitude())).enqueue(new retrofit2.Callback<Weatherdata>() {
             @Override
-            public void onResponse(Call<Weatherdata> call, Response<Weatherdata> response) {
+            public void onResponse(@NonNull Call<Weatherdata> call, @NonNull Response<Weatherdata> response) {
                 final Weatherdata weatherdata = response.body();
                 if (weatherdata == null || weatherdata.product == null || weatherdata.product.time == null) {
                     callback.onError(new Throwable("Weatherdata is null or missing children"));
@@ -85,16 +81,20 @@ public class Yr {
             }
 
             @Override
-            public void onFailure(Call<Weatherdata> call, Throwable t) {
-                callback.onError(t);
+            public void onFailure(@NonNull Call<Weatherdata> call, @NonNull Throwable throwable) {
+                callback.onError(throwable);
             }
         });
+    }
+
+    @Inject
+    public Yr() {
     }
 
     public interface Callback {
         void onTemperature(@NonNull Temperature temperature, @Nullable Symbol symbol);
 
-        void onError(Throwable throwable);
+        void onError(@NonNull Throwable throwable);
     }
 
     // Ignore class attributes in xml, and use own named classes instead.

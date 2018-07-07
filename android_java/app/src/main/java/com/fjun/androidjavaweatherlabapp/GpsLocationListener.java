@@ -18,6 +18,10 @@ import javax.inject.Inject;
  */
 public class GpsLocationListener {
 
+    public interface Callback {
+        void onLocation(Location location);
+    }
+
     private static final long TIME_BETWEEN_UPDATES_MS = 60 * 1000;
     private final Activity mContext;
     private final LocationManager mLocationManager;
@@ -74,9 +78,5 @@ public class GpsLocationListener {
      */
     public void unregisterListener() {
         mLocationManager.removeUpdates(mLocationListener);
-    }
-
-    public interface Callback {
-        void onLocation(Location location);
     }
 }
