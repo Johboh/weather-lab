@@ -8,6 +8,5 @@ import com.spotify.dataenum.dataenum_case;
 @DataEnum
 interface Effect_dataenum {
     dataenum_case waitForLocation();
-
     dataenum_case requestWeather(Location location);
 }

@@ -8,8 +8,6 @@ import com.spotify.dataenum.dataenum_case;
 
 @DataEnum
 interface Event_dataenum {
-    dataenum_case init();
-
     dataenum_case gotLocation(Location location);
 
     dataenum_case gotWeather(YrResult yrResult);

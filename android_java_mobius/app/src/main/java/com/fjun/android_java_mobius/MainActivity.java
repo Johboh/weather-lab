@@ -33,27 +33,33 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewB
 
     @Override
     public void setTemperature(String temperature) {
-        mStatusTextView.setText(getString(R.string.temperature, temperature));
+        // TODO (johboh): Figure out mobius threading.
+        runOnUiThread(() -> mStatusTextView.setText(getString(R.string.temperature, temperature)));
     }
 
     @Override
     public void showSomethingWentWrong(String error) {
-        mStatusTextView.setText(getString(R.string.something_went_wrong, error));
+        // TODO (johboh): Figure out mobius threading.
+        runOnUiThread(() -> mStatusTextView.setText(getString(R.string.something_went_wrong, error)));
     }
 
     @Override
     public void showWaitingForPosition() {
-        mStatusTextView.setText(getString(R.string.waiting_for_position));
+        // TODO (johboh): Figure out mobius threading.
+        runOnUiThread(() -> mStatusTextView.setText(getString(R.string.waiting_for_position)));
     }
 
     @Override
     public void showWaitingForWeather() {
-        mStatusTextView.setText(getString(R.string.waiting_for_weather));
+        // TODO (johboh): Figure out mobius threading.
+        runOnUiThread(() -> mStatusTextView.setText(getString(R.string.waiting_for_weather)));
     }
 
     @Override
     public void setImageUrl(String imageUrl) {
-        Picasso picasso = Picasso.get();
-        picasso.load(imageUrl).into(mImageView);
+        runOnUiThread(() -> {
+            Picasso picasso = Picasso.get();
+            picasso.load(imageUrl).into(mImageView);
+        });
     }
 }

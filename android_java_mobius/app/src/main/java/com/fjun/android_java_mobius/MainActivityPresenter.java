@@ -22,13 +22,13 @@ import com.spotify.mobius.Mobius;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.functions.Consumer;
 
-import java.util.Collections;
 import java.util.Locale;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
 import static com.fjun.android_java_mobius.Yr.YrWeatherService.IMAGE_URL;
+import static com.spotify.mobius.Effects.effects;
 
 /**
  * Presenter for main activity. Presents temperature and icon.
@@ -37,31 +37,35 @@ import static com.fjun.android_java_mobius.Yr.YrWeatherService.IMAGE_URL;
 public class MainActivityPresenter implements LifecycleObserver {
 
     private final MainActivityViewBinder mViewBinder;
-    private final MobiusLoop<Model, Event, Effect> mMobiusLoop;
+    private final EffectHandler mEffectHandler;
+    private MobiusLoop<Model, Event, Effect> mMobiusLoop;
 
     @Inject
     MainActivityPresenter(
             MainActivityViewBinder viewBinder,
             EffectHandler effectHandler) {
         mViewBinder = viewBinder;
+        mEffectHandler = effectHandler;
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    public void onStart() {
         mMobiusLoop = Mobius.loop(UpdateFunction::update, new Connectable<Effect, Event>() {
             @Nonnull
             @Override
             public Connection<Effect> connect(@NonNull Consumer<Event> eventConsumer) throws ConnectionLimitExceededException {
-                return effectHandler.effectHandler(eventConsumer);
+                return mEffectHandler.effectHandler(eventConsumer);
             }
         }).init(new Init<Model, Effect>() {
             @Nonnull
             @Override
             public First<Model, Effect> init(@NonNull Model model) {
-                return First.first(Model.builder().isFetchingLocation(true).build(), Collections.singleton(Effect.waitForLocation()));
+                return First.first(Model.builder().isFetchingLocation(true).build(), effects(Effect.waitForLocation()));
             }
         }).startFrom(Model.builder().isFetchingLocation(true).build());
-    }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    public void onStart() {
         mMobiusLoop.observe(model -> {
+            // TODO (johboh): Threading?
             if (model.isFetchingLocation()) {
                 mViewBinder.showWaitingForPosition();
             } else if (model.isFetchingWeather()) {

@@ -5,24 +5,18 @@ import android.support.annotation.NonNull;
 import com.spotify.dataenum.function.Function;
 import com.spotify.mobius.Next;
 
-import java.util.Collections;
-
 import javax.annotation.Nonnull;
+
+import static com.spotify.mobius.Effects.effects;
 
 public class UpdateFunction {
     @NonNull
     public static Next<Model, Effect> update(Model model, Event event) {
-        return event.map(new Function<Event.init, Next<Model, Effect>>() {
-            @Nonnull
-            @Override
-            public Next<Model, Effect> apply(@Nonnull Event.init value) {
-                return Next.next(model.toBuilder().isFetchingLocation(true).build(), Collections.singleton(Effect.waitForLocation()));
-            }
-        }, new Function<Event.gotLocation, Next<Model, Effect>>() {
+        return event.map(new Function<Event.gotLocation, Next<Model, Effect>>() {
             @Nonnull
             @Override
             public Next<Model, Effect> apply(@Nonnull Event.gotLocation value) {
-                return Next.next(model.toBuilder().isFetchingLocation(false).isFetchingWeather(true).build(), Collections.singleton(Effect.requestWeather(value.location())));
+                return Next.next(Model.builder().isFetchingWeather(true).build(), effects(Effect.requestWeather(value.location())));
             }
         }, new Function<Event.gotWeather, Next<Model, Effect>>() {
             @Nonnull

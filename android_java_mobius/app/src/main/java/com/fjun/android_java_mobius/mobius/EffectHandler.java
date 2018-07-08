@@ -20,7 +20,7 @@ public class EffectHandler {
     private final Yr mYr;
 
     @Inject
-    public EffectHandler(GpsLocationListener gpsLocationListener, Yr yr) {
+    EffectHandler(GpsLocationListener gpsLocationListener, Yr yr) {
         mGpsLocationListener = gpsLocationListener;
         mYr = yr;
     }
