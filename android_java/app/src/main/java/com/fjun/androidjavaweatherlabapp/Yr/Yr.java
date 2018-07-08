@@ -4,49 +4,42 @@ import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import org.simpleframework.xml.core.Persister;
-import org.simpleframework.xml.strategy.TreeStrategy;
-import org.simpleframework.xml.strategy.Type;
-import org.simpleframework.xml.strategy.Value;
-import org.simpleframework.xml.stream.NodeMap;
-
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.List;
-import java.util.Map;
 
 import javax.inject.Inject;
 
 import retrofit2.Call;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
 /**
  * Helper for requesting data from YR weather service, given a location.
  */
 public class Yr {
 
+    private final YrWeatherService mYrWeatherService;
+
+    @Inject
+    public Yr(YrRetrofit yrRetrofit) {
+        mYrWeatherService = yrRetrofit.createYrWeatherService();
+    }
+
     /**
      * Request weather given a location.
      */
     public void requestWeather(Location location, Callback callback) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(YrWeatherService.BASE_URL)
-                .addConverterFactory(SimpleXmlConverterFactory.createNonStrict(new Persister(new TreeStrategyWithoutClass())))
-                .build();
-
         // Convert latitude and longitude to two decimal numbers with . as separator
-        YrWeatherService yrWeatherService = retrofit.create(YrWeatherService.class);
         final DecimalFormat formatter = new DecimalFormat("#0.00");
         DecimalFormatSymbols custom = new DecimalFormatSymbols();
         custom.setDecimalSeparator('.');
         formatter.setDecimalFormatSymbols(custom);
-        yrWeatherService.forecast(formatter.format(location.getLatitude()), formatter.format(location.getLongitude())).enqueue(new retrofit2.Callback<Weatherdata>() {
+
+        mYrWeatherService.forecast(formatter.format(location.getLatitude()), formatter.format(location.getLongitude())).enqueue(new retrofit2.Callback<Weatherdata>() {
             @Override
             public void onResponse(@NonNull Call<Weatherdata> call, @NonNull Response<Weatherdata> response) {
                 final Weatherdata weatherdata = response.body();
-                if (weatherdata == null || weatherdata.product == null || weatherdata.product.time == null) {
+                if (weatherdata == null || weatherdata.getProduct() == null || weatherdata.getProduct().getTimes() == null) {
                     callback.onError(new Throwable("Weatherdata is null or missing children"));
                     return;
                 }
@@ -55,15 +48,15 @@ public class Yr {
                 // Symbol and temperature are not located within the same <time>
                 Temperature temperature = null;
                 Symbol symbol = null;
-                final List<Time> times = weatherdata.product.time;
+                final List<Time> times = weatherdata.getProduct().getTimes();
                 for (Time time : times) {
-                    final com.fjun.androidjavaweatherlabapp.Yr.Location timeLocation = time.location;
+                    final com.fjun.androidjavaweatherlabapp.Yr.Location timeLocation = time.getLocation();
                     if (timeLocation != null) {
                         if (symbol == null) {
-                            symbol = timeLocation.symbol;
+                            symbol = timeLocation.getSymbol();
                         }
                         if (temperature == null) {
-                            temperature = timeLocation.temperature;
+                            temperature = timeLocation.getTemperature();
                         }
                     }
                     // Found both of them?
@@ -87,21 +80,9 @@ public class Yr {
         });
     }
 
-    @Inject
-    public Yr() {
-    }
-
     public interface Callback {
         void onTemperature(@NonNull Temperature temperature, @Nullable Symbol symbol);
 
         void onError(@NonNull Throwable throwable);
-    }
-
-    // Ignore class attributes in xml, and use own named classes instead.
-    private class TreeStrategyWithoutClass extends TreeStrategy {
-        @Override
-        public Value read(Type type, NodeMap node, Map map) {
-            return null;
-        }
     }
 }

@@ -7,9 +7,17 @@ import org.simpleframework.xml.Element;
  */
 public class Location {
     @Element(name = "temperature", required = false)
-    public Temperature temperature;
+    private Temperature temperature;
     @Element(name = "symbol", required = false)
-    public Symbol symbol;
+    private Symbol symbol;
+
+    public Temperature getTemperature() {
+        return temperature;
+    }
+
+    public Symbol getSymbol() {
+        return symbol;
+    }
 
     public Location() {
     }

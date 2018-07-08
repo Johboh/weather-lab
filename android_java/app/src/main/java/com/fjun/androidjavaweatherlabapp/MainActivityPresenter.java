@@ -45,9 +45,9 @@ public class MainActivityPresenter implements LifecycleObserver {
             mYr.requestWeather(location, new Yr.Callback() {
                 @Override
                 public void onTemperature(@NonNull Temperature temperature, @Nullable Symbol symbol) {
-                    mViewBinder.setTemperature(String.format(Locale.US, "%s %s", temperature.value, temperature.unit));
+                    mViewBinder.setTemperature(String.format(Locale.US, "%s %s", temperature.getValue(), temperature.getUnit()));
                     if (symbol != null) {
-                        mViewBinder.setImageUrl(String.format(Locale.US, IMAGE_URL, symbol.number));
+                        mViewBinder.setImageUrl(String.format(Locale.US, IMAGE_URL, symbol.getNumber()));
                     }
                 }
 

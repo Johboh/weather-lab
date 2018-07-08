@@ -4,6 +4,10 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
+/**
+ * Retrofit definition for YR weather endpoints.
+ * API: https://api.met.no
+ */
 public interface YrWeatherService {
 
     String BASE_URL = "https://api.met.no/weatherapi/";

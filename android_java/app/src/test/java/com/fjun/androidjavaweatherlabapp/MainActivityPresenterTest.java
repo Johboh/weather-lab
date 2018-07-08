@@ -18,6 +18,7 @@ import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class MainActivityPresenterTest {
@@ -83,9 +84,9 @@ public class MainActivityPresenterTest {
 
         final ArgumentCaptor<Yr.Callback> weatherCallbackCaptor = ArgumentCaptor.forClass(Yr.Callback.class);
         verify(mYr).requestWeather(any(), weatherCallbackCaptor.capture());
-        final Temperature temperature = new Temperature();
-        temperature.unit = "C";
-        temperature.value = "10";
+        final Temperature temperature = mock(Temperature.class);
+        when(temperature.getUnit()).thenReturn("C");
+        when(temperature.getValue()).thenReturn("10");
         weatherCallbackCaptor.getValue().onTemperature(temperature, null);
 
         verify(mViewBinder).setTemperature("10 C");
@@ -103,13 +104,13 @@ public class MainActivityPresenterTest {
 
         final ArgumentCaptor<Yr.Callback> weatherCallbackCaptor = ArgumentCaptor.forClass(Yr.Callback.class);
         verify(mYr).requestWeather(any(), weatherCallbackCaptor.capture());
-        final Symbol symbol = new Symbol();
-        symbol.number = 123456789;
+        final Symbol symbol = mock(Symbol.class);
+        when(symbol.getNumber()).thenReturn(123456789);
         weatherCallbackCaptor.getValue().onTemperature(mock(Temperature.class), symbol);
 
         ArgumentCaptor<String> imageUri = ArgumentCaptor.forClass(String.class);
         verify(mViewBinder).setImageUrl(imageUri.capture());
-        assertTrue(imageUri.getValue().contains(String.valueOf(symbol.number)));
+        assertTrue(imageUri.getValue().contains(String.valueOf(symbol.getNumber())));
     }
 
     @Test

@@ -7,7 +7,11 @@ import org.simpleframework.xml.Attribute;
  */
 public class Symbol {
     @Attribute(name = "number", required = false)
-    public Integer number;
+    private Integer number;
+
+    public Integer getNumber() {
+        return number;
+    }
 
     public Symbol() {
     }

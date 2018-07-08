@@ -7,7 +7,11 @@ import org.simpleframework.xml.Element;
  */
 public class Time {
     @Element(name = "location", required = false)
-    public Location location;
+    private Location location;
+
+    public Location getLocation() {
+        return location;
+    }
 
     public Time() {
     }

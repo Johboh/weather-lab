@@ -9,7 +9,11 @@ import org.simpleframework.xml.Root;
 @Root(strict = false)
 public class Weatherdata {
     @Element(name = "product", type = Product.class)
-    public Product product;
+    private Product product;
+
+    public Product getProduct() {
+        return product;
+    }
 
     public Weatherdata() { // required
     }

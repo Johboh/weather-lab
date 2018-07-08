@@ -7,9 +7,17 @@ import org.simpleframework.xml.Attribute;
  */
 public class Temperature {
     @Attribute(name = "unit", required = false)
-    public String unit;
+    private String unit;
     @Attribute(name = "value", required = false)
-    public String value;
+    private String value;
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public String getValue() {
+        return value;
+    }
 
     public Temperature() {
     }
