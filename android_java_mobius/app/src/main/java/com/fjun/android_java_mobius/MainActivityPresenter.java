@@ -16,8 +16,6 @@ import com.fjun.android_java_mobius.mobius.UpdateFunction;
 import com.spotify.mobius.Connectable;
 import com.spotify.mobius.Connection;
 import com.spotify.mobius.ConnectionLimitExceededException;
-import com.spotify.mobius.First;
-import com.spotify.mobius.Init;
 import com.spotify.mobius.Mobius;
 import com.spotify.mobius.MobiusLoop;
 import com.spotify.mobius.functions.Consumer;
@@ -28,7 +26,6 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
 import static com.fjun.android_java_mobius.Yr.YrWeatherService.IMAGE_URL;
-import static com.spotify.mobius.Effects.effects;
 
 /**
  * Presenter for main activity. Presents temperature and icon.
@@ -38,14 +35,17 @@ public class MainActivityPresenter implements LifecycleObserver {
 
     private final MainActivityViewBinder mViewBinder;
     private final EffectHandler mEffectHandler;
+    private final GpsLocationListener mGpsLocationListener;
     private MobiusLoop<Model, Event, Effect> mMobiusLoop;
 
     @Inject
     MainActivityPresenter(
             MainActivityViewBinder viewBinder,
-            EffectHandler effectHandler) {
+            EffectHandler effectHandler,
+            GpsLocationListener gpsLocationListener) {
         mViewBinder = viewBinder;
         mEffectHandler = effectHandler;
+        mGpsLocationListener = gpsLocationListener;
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
@@ -56,13 +56,8 @@ public class MainActivityPresenter implements LifecycleObserver {
             public Connection<Effect> connect(@NonNull Consumer<Event> eventConsumer) throws ConnectionLimitExceededException {
                 return mEffectHandler.effectHandler(eventConsumer);
             }
-        }).init(new Init<Model, Effect>() {
-            @Nonnull
-            @Override
-            public First<Model, Effect> init(@NonNull Model model) {
-                return First.first(Model.builder().isFetchingLocation(true).build(), effects(Effect.waitForLocation()));
-            }
-        }).startFrom(Model.builder().isFetchingLocation(true).build());
+        }).eventSource(mGpsLocationListener)
+                .startFrom(Model.builder().isFetchingLocation(true).build());
 
         mMobiusLoop.observe(model -> {
             // TODO (johboh): Threading?

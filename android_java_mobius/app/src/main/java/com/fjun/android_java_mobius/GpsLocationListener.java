@@ -8,27 +8,34 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
+import com.fjun.android_java_mobius.mobius.Event;
+import com.spotify.mobius.EventSource;
+import com.spotify.mobius.disposables.Disposable;
+import com.spotify.mobius.functions.Consumer;
+
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
 /**
  * Wrapper around Location Listener, which also handle check for permissions
  */
-public class GpsLocationListener {
+public class GpsLocationListener implements EventSource<Event>, Disposable {
 
     private static final long TIME_BETWEEN_UPDATES_MS = 60 * 1000;
     private final Activity mContext;
     private final LocationManager mLocationManager;
     @Nullable
-    private Callback mCallback;
+    private Consumer<Event> mEventConsumer;
     private final LocationListener mLocationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
-            if (mCallback != null) {
-                mCallback.onLocation(location);
+            if (mEventConsumer != null) {
+                mEventConsumer.accept(Event.gotLocation(location));
             }
         }
 
@@ -51,21 +58,6 @@ public class GpsLocationListener {
         this.mLocationManager = locationManager;
     }
 
-    /**
-     * Register for location callbacks given a listener, at max TIME_BETWEEN_UPDATES_MS
-     * Will first check that the user have permissions to get location.
-     * //TODO (johboh): If the user does not have permission but accepts it, no registration will happen.
-     */
-    @SuppressLint("MissingPermission")
-    public void registerListener(Callback callback) {
-        mCallback = callback;
-
-        if (hasPermissions()) {
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BETWEEN_UPDATES_MS, 0, mLocationListener);
-            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BETWEEN_UPDATES_MS, 0, mLocationListener);
-        }
-    }
-
     private boolean hasPermissions() {
         if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
@@ -76,31 +68,24 @@ public class GpsLocationListener {
         return true;
     }
 
-    /**
-     * get last known location. Will check for permissions first. If no permissions currently,
-     * will return null. Also if there is no known location.
-     */
-    @Nullable
+    @Nonnull
+    @Override
     @SuppressLint("MissingPermission")
-    public Location getLastKnownLocation() {
-        if (!hasPermissions()) {
-            return null;
+    public Disposable subscribe(@NonNull Consumer<Event> eventConsumer) {
+        mEventConsumer = eventConsumer;
+        // Register for location callbacks given a listener, at max TIME_BETWEEN_UPDATES_MS
+        // Will first check that the user have permissions to get location.
+        // TODO (johboh): If the user does not have permission but accepts it, no registration will happen.
+        if (hasPermissions()) {
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIME_BETWEEN_UPDATES_MS, 0, mLocationListener);
+            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, TIME_BETWEEN_UPDATES_MS, 0, mLocationListener);
         }
-        final Location location = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if (location != null) {
-            return location;
-        }
-        return mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        return this;
     }
 
-    /**
-     * Remove a location listener. The listener will no longer receive callbacks.
-     */
-    public void unregisterListener() {
+    @Override
+    public void dispose() {
+        // Remove a location listener. The listener will no longer receive callbacks.
         mLocationManager.removeUpdates(mLocationListener);
-    }
-
-    public interface Callback {
-        void onLocation(Location location);
     }
 }

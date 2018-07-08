@@ -1,10 +1,8 @@
 package com.fjun.android_java_mobius.mobius;
 
-import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.fjun.android_java_mobius.GpsLocationListener;
 import com.fjun.android_java_mobius.Yr.Symbol;
 import com.fjun.android_java_mobius.Yr.Temperature;
 import com.fjun.android_java_mobius.Yr.Yr;
@@ -16,12 +14,10 @@ import javax.inject.Inject;
 
 public class EffectHandler {
 
-    private final GpsLocationListener mGpsLocationListener;
     private final Yr mYr;
 
     @Inject
-    EffectHandler(GpsLocationListener gpsLocationListener, Yr yr) {
-        mGpsLocationListener = gpsLocationListener;
+    EffectHandler(Yr yr) {
         mYr = yr;
     }
 
@@ -30,14 +26,6 @@ public class EffectHandler {
             @Override
             public void accept(@NonNull Effect effect) {
                 effect.match(
-                        waitForLocation -> {
-                            final Location location = mGpsLocationListener.getLastKnownLocation();
-                            if (location == null) {
-                                eventConsumer.accept(Event.gotError("No location at this time."));
-                            } else {
-                                eventConsumer.accept(Event.gotLocation(location));
-                            }
-                        },
                         requestWeather -> mYr.requestWeather(requestWeather.location(), new Yr.Callback() {
                             @Override
                             public void onTemperature(@NonNull Temperature temperature, @Nullable Symbol symbol) {
