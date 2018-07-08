@@ -5,6 +5,6 @@ import org.koin.dsl.module.applicationContext
 
 // Koin module
 val myModule: Module = applicationContext {
-    factory { MainActivityPresenter(get()) }
-    bean { MainActivity() as MainActivityViewBinder }
+    factory { params -> MainActivityPresenter(get { params.values }) }
+    factory { params -> GpsLocationListener(params["activity"]) }
 }

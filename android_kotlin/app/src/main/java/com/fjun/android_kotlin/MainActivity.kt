@@ -9,13 +9,14 @@ import org.koin.android.ext.android.inject
 class MainActivity : AppCompatActivity(), MainActivityViewBinder {
 
     // Inject MyPresenter
-    val presenter: MainActivityPresenter by inject()
+    private val presenter: MainActivityPresenter by inject { mapOf("activity" to this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         // Setup presenter: Attach lifecycle
+        presenter.setViewBinder(this)
         lifecycle.addObserver(presenter)
     }
 
